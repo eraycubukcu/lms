@@ -37,8 +37,9 @@ export interface LessonInput {
   contentUrl?: string;
 }
 
+/** GET /api/v1/courses/:id yanıtı: içerik `course.modules` altında gelir. */
 interface CourseDetailResponse {
-  modules: Array<{
+  course: { modules: Array<{
     id: string;
     title: string;
     order: number;
@@ -51,7 +52,7 @@ interface CourseDetailResponse {
       order: number;
       status: LessonStatus;
     }>;
-  }>;
+  }> };
 }
 
 /**
@@ -71,7 +72,7 @@ export function useCourseContent(courseId: string | undefined) {
     setError(null);
     return apiFetch<CourseDetailResponse>(`/api/v1/courses/${courseId}`)
       .then((result) => {
-        const sorted = [...result.modules]
+        const sorted = [...result.course.modules]
           .sort((a, b) => a.order - b.order)
           .map((module) => ({
             id: module.id,
