@@ -225,6 +225,7 @@ async function main() {
       { path: '/yonetim/kullanicilar', label: 'Kullanıcı Yönetimi', icon: 'manage_accounts', order: 10, roles: 'ADMIN' },
       { path: '/yonetim/sinavlar', label: 'Sınav Yönetimi', icon: 'fact_check', order: 11, roles: 'ADMIN,INSTRUCTOR' },
       { path: '/yonetim/soru-bankasi', label: 'Soru Bankası', icon: 'library_books', order: 12, roles: 'ADMIN,INSTRUCTOR' },
+      { path: '/yonetim/gorevler', label: 'Görev Yönetimi', icon: 'assignment_add', order: 13, roles: 'ADMIN,INSTRUCTOR' },
     ],
   });
 
@@ -269,6 +270,38 @@ async function main() {
 
   // Öğrenci hesabı aynı zamanda yönetici (roles: STUDENT,ADMIN); genel bankanın sahibi olarak kullanılır.
   await seedExamData(prisma, { courseId: course.id, instructorId: instructor.id, adminId: student.id });
+
+  // Dashboard "Yaklaşan Görevler" paneli için teslimli görevler (FR-12).
+  const daysFromNow = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  await prisma.assignment.createMany({
+    data: [
+      {
+        courseId: course.id,
+        title: 'Veri Yapıları Proje Ödevi 2',
+        summary: 'Dengeli Ağaç (AVL Tree) Gerçekleştirimi',
+        instructions: 'AVL ağacını ekleme, silme ve dengeleme işlemleriyle birlikte gerçekleştirin. Kaynak kodunuzun bağlantısını teslim edin.',
+        type: 'PROJECT',
+        priority: 'HIGH',
+        status: 'PUBLISHED',
+        dueAt: daysFromNow(2),
+        submissionKind: 'LINK',
+        createdById: instructor.id,
+      },
+      {
+        courseId: oopCourse.id,
+        title: 'Yapay Zekâ Mini Proje Teslimi',
+        summary: 'Lineer Regresyon ile Tahminleme Notebook’u',
+        instructions: 'Verilen veri kümesi üzerinde lineer regresyon modeli kurun ve notebook bağlantınızı teslim edin.',
+        type: 'LAB',
+        priority: 'NORMAL',
+        status: 'PUBLISHED',
+        dueAt: daysFromNow(5),
+        lateUntil: daysFromNow(6),
+        submissionKind: 'LINK',
+        createdById: instructor2.id,
+      },
+    ],
+  });
 
   console.log('Seed tamamlandı.');
 }

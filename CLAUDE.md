@@ -192,6 +192,14 @@ The type interface is defined in `src/types/index.ts`:
 - `StudentProfile`, `TermInfo`, `ActivityDay` (student context)
 - `Course`, `UpcomingTask`, `Announcement`, `AiGuide` (content entities)
 
+### Yaklaşan Görevler (dinamik, FR-12)
+
+The dashboard "Yaklaşan Görevler" panel no longer uses the fixture:
+
+- **Data model:** `Assignment` (ASSIGNMENT | PROJECT | LAB, priority, DRAFT/PUBLISHED, `dueAt`, optional `availableFrom` / `lateUntil`) and `AssignmentSubmission` (one per student; TEXT or LINK — FILE returns 415 for now). Exams come from the existing `Exam` model.
+- **API:** `/api/v1/assignments` CRUD + `/publish` `/unpublish` (ADMIN or assigned instructor), `/api/v1/assignments/:id/submission(s)` (student submit/withdraw, staff list/grade), `GET /api/v1/users/me/assignments`, and `GET /api/v1/users/me/upcoming-tasks?limit=` (unsubmitted open assignments + unclosed exams, sorted, with `total`).
+- **Web:** the API returns raw data; `features/dashboard/upcomingTaskMeta.ts` builds the Turkish labels ("2 gün kaldı", "Cuma 14:00"). Staff manage tasks at `/yonetim/gorevler`; students see `/notlar-ve-gorevler` and `/gorevler/:id`.
+
 ---
 
 ## Responsive Design

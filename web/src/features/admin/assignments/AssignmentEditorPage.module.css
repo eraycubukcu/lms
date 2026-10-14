@@ -1,0 +1,106 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.header h1 {
+  margin: var(--space-xs) 0 var(--space-sm);
+}
+
+.back {
+  color: var(--color-secondary);
+  text-decoration: none;
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
+.back:focus-visible,
+.link:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--gutter);
+  align-items: start;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  position: sticky;
+  top: var(--space-md);
+}
+
+.submissions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.submission {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface-container-low);
+}
+
+.submissionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.link {
+  color: var(--color-secondary);
+  overflow-wrap: anywhere;
+}
+
+.grade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm);
+}
+
+.feedback {
+  flex: 1 1 14rem;
+}
+
+@media (max-width: 1024px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+
+  .preview {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+  }
+}

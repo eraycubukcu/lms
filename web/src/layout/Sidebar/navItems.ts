@@ -55,6 +55,13 @@ export const EXAM_MANAGEMENT_ITEM: NavItem = {
   icon: 'fact_check',
 };
 
+/** ADMIN ve INSTRUCTOR icin odev/proje/lab yonetimi; DB'de ayni yol varsa tekrar eklenmez. */
+export const ASSIGNMENT_MANAGEMENT_ITEM: NavItem = {
+  path: '/yonetim/gorevler',
+  label: 'Görev Yönetimi',
+  icon: 'assignment_add',
+};
+
 /** ADMIN ve INSTRUCTOR icin soru bankasi; DB'de ayni yol varsa tekrar eklenmez. */
 export const QUESTION_BANK_ITEM: NavItem = {
   path: '/yonetim/soru-bankasi',

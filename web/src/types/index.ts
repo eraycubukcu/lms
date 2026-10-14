@@ -104,11 +104,14 @@ export interface KpiMetric {
   progress?: number;
 }
 
-export type TaskKind = 'assignment' | 'exam' | 'lab';
+export type TaskKind = 'assignment' | 'exam';
 
+/** Panel kartının sunum modeli; `upcomingTaskMeta.ts` API kaydından üretir. */
 export interface UpcomingTask {
   id: string;
   kind: TaskKind;
+  /** Kart aksiyonunun gideceği uygulama içi yol. */
+  href: string;
   /** Sol üstteki tür/öncelik etiketi. */
   tagLabel: string;
   tagTone: BadgeTone;
@@ -121,6 +124,104 @@ export interface UpcomingTask {
   metaLabel: string;
   durationLabel?: string;
   actionLabel: string;
+}
+
+export type AssignmentType = 'ASSIGNMENT' | 'PROJECT' | 'LAB';
+export type AssignmentPriority = 'LOW' | 'NORMAL' | 'HIGH';
+
+/** GET /api/v1/users/me/upcoming-tasks kaydı: ham veri, metinler istemcide üretilir. */
+export type UpcomingTaskDto =
+  | {
+      kind: 'assignment';
+      id: string;
+      type: AssignmentType;
+      priority: AssignmentPriority;
+      title: string;
+      summary: string | null;
+      dueAt: string;
+      lateUntil: string | null;
+      course: { id: string; title: string };
+    }
+  | {
+      kind: 'exam';
+      id: string;
+      type: 'QUIZ' | 'MIDTERM' | 'FINAL' | 'PRACTICE';
+      title: string;
+      summary: string | null;
+      startsAt: string | null;
+      endsAt: string | null;
+      durationMinutes: number | null;
+      questionCount: number;
+      availability: 'UPCOMING' | 'OPEN';
+      course: { id: string; title: string };
+    };
+
+export type AssignmentStatus = 'DRAFT' | 'PUBLISHED';
+export type SubmissionKind = 'TEXT' | 'LINK' | 'FILE';
+
+/** GET /api/v1/assignments/:id kaydı; sayaçlar yalnızca yöneticiye döner. */
+export interface AssignmentItem {
+  id: string;
+  title: string;
+  summary: string | null;
+  instructions: string | null;
+  type: AssignmentType;
+  priority: AssignmentPriority;
+  status: AssignmentStatus;
+  course: { id: string; title: string };
+  availableFrom: string | null;
+  dueAt: string;
+  lateUntil: string | null;
+  maxScore: number;
+  submissionKind: SubmissionKind;
+  createdBy: { id: string; name: string } | null;
+  createdAt: string;
+  updatedAt: string;
+  submissionCount?: number;
+  enrolledCount?: number;
+}
+
+/** POST/PATCH gövdesi. Tarihler ISO, boş alanlar null. */
+export interface AssignmentInput {
+  courseId?: string;
+  title: string;
+  summary: string | null;
+  instructions: string | null;
+  type: AssignmentType;
+  priority: AssignmentPriority;
+  availableFrom: string | null;
+  dueAt: string;
+  lateUntil: string | null;
+  maxScore: number;
+  submissionKind: SubmissionKind;
+}
+
+export interface AssignmentSubmission {
+  id: string;
+  content: string | null;
+  filePath: string | null;
+  submittedAt: string;
+  late: boolean;
+  score: number | null;
+  feedback: string | null;
+  gradedAt: string | null;
+}
+
+/** GET /api/v1/users/me/assignments kaydı. `open`: teslim hâlâ kabul ediliyor. */
+export interface MyAssignment extends AssignmentItem {
+  submission: AssignmentSubmission | null;
+  open: boolean;
+}
+
+export interface AssignmentSubmissionRow {
+  student: { id: string; name: string; email: string; avatarUrl: string | null };
+  submission: AssignmentSubmission | null;
+}
+
+export interface UpcomingTasksResponse {
+  items: UpcomingTaskDto[];
+  total: number;
+  serverTime: string;
 }
 
 export interface Announcement {
@@ -227,7 +328,6 @@ export interface DashboardData {
   term: TermInfo;
   weeklyGoalSummary: string;
   kpis: KpiMetric[];
-  upcomingTasks: UpcomingTask[];
   aiGuide: AiGuide;
   announcements: Announcement[];
 }

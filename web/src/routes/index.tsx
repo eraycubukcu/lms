@@ -7,7 +7,7 @@ import { RedirectIfAuthed } from './RedirectIfAuthed';
 import { DashboardPage } from '../features/dashboard';
 import { CoursesPage, CourseDetailPage, LessonDetailPage } from '../features/courses';
 import { AnnouncementsPage, AnnouncementDetailPage, AnnouncementsAdminPage } from '../features/announcements';
-import { AssignmentsPage } from '../features/assignments';
+import { AssignmentsPage, AssignmentDetailPage } from '../features/assignments';
 import { ExamsPage } from '../features/exams';
 import { LoginPage, RegisterPage } from '../features/auth';
 import { ProfilePage } from '../features/profile';
@@ -21,6 +21,7 @@ import { AdminNavItemsPage } from '../features/admin/nav-items';
 import { AdminUsersPage } from '../features/admin/users';
 import { AdminExamsPage, ExamEditorPage } from '../features/admin/exams';
 import { QuestionBanksPage, QuestionBankDetailPage } from '../features/admin/question-banks';
+import { AdminAssignmentsPage, AssignmentEditorPage } from '../features/admin/assignments';
 
 // Takvim, FullCalendar'ı ana pakete eklememek için ayrı parça (chunk) olarak yüklenir.
 const CalendarPage = lazy(() => import('../features/calendar').then((m) => ({ default: m.CalendarPage })));
@@ -55,6 +56,7 @@ export const router = createBrowserRouter([
             ),
           },
           { path: 'notlar-ve-gorevler', element: <AssignmentsPage /> },
+          { path: 'gorevler/:id', element: <AssignmentDetailPage /> },
           { path: 'sinavlar', element: <ExamsPage /> },
           { path: 'profil', element: <ProfilePage /> },
           {
@@ -75,6 +77,8 @@ export const router = createBrowserRouter([
               { path: 'yonetim/duyurular', element: <AnnouncementsAdminPage /> },
               { path: 'yonetim/sinavlar', element: <AdminExamsPage /> },
               { path: 'yonetim/sinavlar/:examId', element: <ExamEditorPage /> },
+              { path: 'yonetim/gorevler', element: <AdminAssignmentsPage /> },
+              { path: 'yonetim/gorevler/:assignmentId', element: <AssignmentEditorPage /> },
               { path: 'yonetim/soru-bankasi', element: <QuestionBanksPage /> },
               { path: 'yonetim/soru-bankasi/:bankId', element: <QuestionBankDetailPage /> },
               {

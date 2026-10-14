@@ -44,6 +44,9 @@ model User {
   questionsCreated     Question[]     @relation("QuestionsCreated")
   examsCreated         Exam[]         @relation("ExamsCreated")
   examCandidacies      ExamCandidate[]
+  assignmentsCreated   Assignment[]   @relation("AssignmentsCreated")
+  assignmentSubmissions AssignmentSubmission[] @relation("AssignmentSubmissions")
+  assignmentSubmissionsGraded AssignmentSubmission[] @relation("AssignmentSubmissionsGraded")
 }
 
 model Course {
@@ -64,6 +67,7 @@ model Course {
   questionBanks QuestionBank[]
   exams         Exam[]
   comments      CourseComment[]
+  assignments   Assignment[]
 }
 
 model Module {
@@ -374,5 +378,65 @@ model ExamCandidate {
   createdAt DateTime @default(now())
 
   @@unique([examId, userId])
+  @@index([userId])
+}
+
+/// Kursa ait teslimli görev (FR-12): ödev, proje veya laboratuvar. Sınavlar Exam modelindedir.
+/// Öğrenciye görünmesi için status PUBLISHED ve (varsa) availableFrom <= şimdi olmalıdır.
+model Assignment {
+  id             String                 @id @default(cuid())
+  courseId       String
+  course         Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title          String
+  /// Kartta başlığın altındaki tek satır (ör. "Dengeli Ağaç (AVL Tree) Gerçekleştirimi").
+  summary        String?
+  /// Detay sayfasındaki uzun açıklama (düz metin).
+  instructions   String?
+  /// Allowed literals: "ASSIGNMENT" | "PROJECT" | "LAB"
+  type           String                 @default("ASSIGNMENT")
+  /// Allowed literals: "LOW" | "NORMAL" | "HIGH"
+  priority       String                 @default("NORMAL")
+  /// Allowed literals: "DRAFT" | "PUBLISHED"
+  status         String                 @default("DRAFT")
+  /// Öğrencilere görünmeye başladığı an (UTC). Boşsa yayınlanınca hemen.
+  availableFrom  DateTime?
+  /// Son teslim anı (UTC).
+  dueAt          DateTime
+  /// Geç teslime izin verilen son an (UTC). Boşsa geç teslim kapalı.
+  lateUntil      DateTime?
+  maxScore       Int                    @default(100)
+  /// Allowed literals: "TEXT" | "LINK" | "FILE"
+  submissionKind String                 @default("TEXT")
+  createdById    String?
+  createdBy      User?                  @relation("AssignmentsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  submissions    AssignmentSubmission[]
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@index([courseId, dueAt])
+  @@index([status, dueAt])
+}
+
+/// Öğrencinin ödev teslimi. Öğrenci başına ödev başına tek kayıt; yeniden teslim günceller.
+model AssignmentSubmission {
+  id           String     @id @default(cuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation("AssignmentSubmissions", fields: [userId], references: [id], onDelete: Cascade)
+  /// TEXT teslimde metin, LINK teslimde URL.
+  content      String?
+  /// FILE teslimde sunucudaki göreli dosya yolu.
+  filePath     String?
+  submittedAt  DateTime   @default(now())
+  /// dueAt sonrası (lateUntil içinde) yapılan teslim.
+  late         Boolean    @default(false)
+  score        Int?
+  feedback     String?
+  gradedAt     DateTime?
+  gradedById   String?
+  gradedBy     User?      @relation("AssignmentSubmissionsGraded", fields: [gradedById], references: [id], onDelete: SetNull)
+
+  @@unique([assignmentId, userId])
   @@index([userId])
 }

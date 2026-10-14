@@ -1,65 +1,32 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Badge, Card, Icon, Text } from '../../components';
 import { PageContainer } from '../../layout/PageContainer';
+import { formatDayMonthTime, formatRemaining } from '../dashboard/upcomingTaskMeta';
+import { useMyAssignments } from './assignmentApi';
+import { ASSIGNMENT_TYPES, MY_STATES, myState } from './assignmentMeta';
+import type { MyAssignmentState } from './assignmentMeta';
 import styles from './AssignmentsPage.module.css';
 
-interface Assignment {
-  id: string;
-  title: string;
-  course: string;
-  dueDate: string;
-  status: 'pending' | 'submitted' | 'graded' | 'late';
-  description: string;
-}
+type Tab = 'pending' | 'submitted' | 'graded' | 'missed';
 
-const assignments: Assignment[] = [
-  {
-    id: 'assign-1',
-    title: 'Veri Yapıları Proje Ödevi 2',
-    course: 'CENG 201',
-    dueDate: '30 Ekim 23:59',
-    status: 'pending',
-    description: 'Dengeli Ağaç (AVL Tree) Gerçekleştirimi',
-  },
-  {
-    id: 'assign-2',
-    title: 'SQL Pratik Sorular',
-    course: 'SWE 212',
-    dueDate: '25 Ekim 23:59',
-    status: 'submitted',
-    description: 'GROUP BY, JOIN, Aggregate Functions',
-  },
-  {
-    id: 'assign-3',
-    title: 'Yapay Zekâ Mini Proje',
-    course: 'AI 304',
-    dueDate: '31 Ekim 17:00',
-    status: 'pending',
-    description: 'Lineer Regresyon ile Tahminleme Notebook',
-  },
-  {
-    id: 'assign-4',
-    title: 'Matematiksel Analiz Problem Seti 5',
-    course: 'MATH 301',
-    dueDate: '18 Ekim 23:59',
-    status: 'graded',
-    description: '15 problem · Puan: 92/100',
-  },
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'pending', label: 'Bekleyen' },
+  { key: 'submitted', label: 'Teslim Edilen' },
+  { key: 'graded', label: 'Puanlanan' },
+  { key: 'missed', label: 'Süresi Dolan' },
 ];
 
-function getStatusInfo(status: Assignment['status']) {
-  switch (status) {
-    case 'pending':
-      return { tone: 'warning' as const, label: 'Teslim Bekleniyor' };
-    case 'submitted':
-      return { tone: 'cyan' as const, label: 'Teslim Edildi' };
-    case 'graded':
-      return { tone: 'success' as const, label: 'Puanlandı' };
-    case 'late':
-      return { tone: 'error' as const, label: 'Gecikmiş' };
-  }
-}
-
+/** Öğrencinin görevleri: GET /api/v1/users/me/assignments */
 export function AssignmentsPage() {
+  const { assignments, loading, error } = useMyAssignments();
+  const [tab, setTab] = useState<Tab>('pending');
+  const withState = assignments.map((item) => ({ item, state: myState(item) }));
+  const count = (state: MyAssignmentState) => withState.filter((row) => row.state === state).length;
+  const visible = withState.filter((row) => row.state === tab);
+  // Bitenler en yeni üstte; bekleyenler en yakın son teslim üstte (API sırası).
+  if (tab !== 'pending') visible.reverse();
+
   return (
     <PageContainer>
       <div className={styles.header}>
@@ -67,30 +34,59 @@ export function AssignmentsPage() {
           Ödevler & Notlar
         </Text>
         <Text role="body-md" tone="muted" as="p">
-          {assignments.filter((a) => a.status === 'pending').length} teslim beklemede · {assignments.length} toplam
+          {loading ? 'Yükleniyor…' : `${count('pending')} teslim beklemede · ${assignments.length} toplam`}
         </Text>
       </div>
 
+      <div className={styles.tabs} role="group" aria-label="Duruma göre süz">
+        {TABS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={styles.tab}
+            aria-pressed={tab === item.key}
+            onClick={() => setTab(item.key)}
+          >
+            {item.label} <span className={styles.count}>{count(item.key)}</span>
+          </button>
+        ))}
+      </div>
+
+      {error && (
+        <Text role="body-md" tone="error" as="p">
+          {error}
+        </Text>
+      )}
+      {!loading && !error && visible.length === 0 && (
+        <Card padding="lg" elevation="1">
+          <Text role="body-md" tone="muted" as="p">
+            Bu sekmede görev yok.
+          </Text>
+        </Card>
+      )}
+
       <div className={styles.list}>
-        {assignments.map((assign) => {
-          const { tone, label } = getStatusInfo(assign.status);
+        {visible.map(({ item, state }) => {
+          const badge = MY_STATES[state];
           return (
-            <Card key={assign.id} padding="lg" elevation="1">
-              <a href="#" className={styles.assignmentItem}>
+            <Card key={item.id} padding="lg" elevation="1">
+              <Link to={`/gorevler/${item.id}`} className={styles.assignmentItem}>
                 <div className={styles.assignmentHeader}>
                   <div>
                     <Text role="label-md" tone="secondary">
-                      {assign.course}
+                      {item.course.title} · {ASSIGNMENT_TYPES[item.type].label}
                     </Text>
                     <Text role="title-md" as="h3">
-                      {assign.title}
+                      {item.title}
                     </Text>
-                    <Text role="body-sm" tone="muted">
-                      {assign.description}
-                    </Text>
+                    {item.summary && (
+                      <Text role="body-sm" tone="muted">
+                        {item.summary}
+                      </Text>
+                    )}
                   </div>
-                  <Badge tone={tone} variant="soft">
-                    {label}
+                  <Badge tone={badge.tone} variant="soft">
+                    {state === 'graded' ? `${badge.label}: ${item.submission!.score}/${item.maxScore}` : badge.label}
                   </Badge>
                 </div>
 
@@ -98,12 +94,13 @@ export function AssignmentsPage() {
                   <div className={styles.dueDate}>
                     <Icon name="schedule" size="sm" />
                     <Text role="body-sm" tone="muted">
-                      {assign.dueDate}
+                      {formatDayMonthTime(item.dueAt)}
+                      {state === 'pending' ? ` · ${formatRemaining(item.dueAt)}` : ''}
                     </Text>
                   </div>
                   <Icon name="arrow_forward" size="sm" />
                 </div>
-              </a>
+              </Link>
             </Card>
           );
         })}

@@ -4,6 +4,8 @@ import { useCurrentUser } from '../../data/useCurrentUser';
 import { useCourses } from '../courses/useCourses';
 import { useStudyActivity } from './useStudyActivity';
 import { useMyGrades } from './useMyGrades';
+import { useUpcomingTasks } from './useUpcomingTasks';
+import { toUpcomingTask } from './upcomingTaskMeta';
 import { useAnnouncements } from '../announcements/useAnnouncements';
 import { formatRelative, sourceLabel } from '../announcements/announcementMeta';
 import type { Announcement, AnnouncementItem, GradeSummary, KpiMetric } from '../../types';
@@ -63,6 +65,7 @@ export function DashboardPage() {
   const study = useStudyActivity();
   const myGrades = useMyGrades();
   const feed = useAnnouncements({ limit: 3 });
+  const upcoming = useUpcomingTasks(3);
   const greeting = user ? `Hoş geldin, ${user.name} 👋` : 'Hoş geldin 👋';
   const studyReady = !study.loading && !study.error;
   const coursesReady = !coursesLoading && !coursesError;
@@ -137,7 +140,13 @@ export function DashboardPage() {
         </div>
 
         <div className={styles.secondary}>
-          <UpcomingTasks tasks={data.upcomingTasks} />
+          <UpcomingTasks
+            tasks={upcoming.items.map((item) => toUpcomingTask(item))}
+            total={upcoming.total}
+            loading={upcoming.loading}
+            error={upcoming.error}
+            onRetry={upcoming.reload}
+          />
           <AiGuideCard guide={data.aiGuide} />
           <AnnouncementsFeed announcements={feed.announcements.map(toFeedItem)} />
         </div>
